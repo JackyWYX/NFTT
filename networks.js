@@ -58,6 +58,11 @@ module.exports = {
         network_id: '42',       // Any network (default: none)
         skipDryRun: true,
     },
+    rinkeby: {
+        provider: () => new HDWalletProvider(PRIKEY, "https://rinkeby.infura.io/v3/d4e15ba154584226bdcba2f1e3ccdbde"),
+        network_id: '4',       // Any network (default: none)
+        skipDryRun: true,
+    },
     develop: {
         host: "127.0.0.1",
         port: 8545,

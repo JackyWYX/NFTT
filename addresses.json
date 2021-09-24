@@ -1,0 +1,11 @@
+{
+    "rinkeby": {
+        "DerivativeFactory": "0xd32dD85109a7aEAF560ac717912A60a30cf40F85",
+        "IPPool": "0x1D3238c832f4f9458BDE5441d81A5D14B0B08925",
+        "Licenser": "0x3f7233BA8CcF89d4cF35f79406ac1640f43c6A92",
+        "Derivatives": [
+            "0x4a2B8D85CB96621FF4E60D019Dd9384929938Bf4"
+        ],
+        "MockNFT": "0xbA086d5795095b29918537F944A42Df837Cb0d91"
+    }
+}
