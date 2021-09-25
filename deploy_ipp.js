@@ -3,6 +3,7 @@ const Derivative = artifacts.require("Derivative");
 const IPPool = artifacts.require("IPPool");
 const Licenser = artifacts.require("Licenser");
 const MockNFT = artifacts.require("MockNFT");
+const fs = require('fs');
 
 async function deploy() {
     const factory = await DerivativeFactory.new();
@@ -63,9 +64,28 @@ async function add_delivery(factory, orderId, tokenURI) {
     }
 }
 
+const TesterAddress = [
+    '0x7A6Ed0a905053A21C15cB5b4F39b561B6A3FE50f'
+]
+
+async function faucetETH() {
+    const chainId = await web3.eth.getChainId();
+    if (chainId == 1337) { // 1337 is local test evm
+        const accounts = await web3.eth.getAccounts();
+        for(let i = 0; i < TesterAddress.length; i++) {
+            const tester = TesterAddress[i];
+            const value = web3.utils.toWei("1");
+            console.log('send eth to:', tester)
+            await web3.eth.sendTransaction({ from:accounts[0], to: tester, value });
+        }
+    }
+}
+
 async function main() {
     const accounts = await web3.eth.getAccounts();
     console.log('accounts:', accounts);
+    const chainId = await web3.eth.getChainId();
+    console.log('chainId:', chainId);
 
     const { factory, ippool, licenser } = await deploy();
 
@@ -76,14 +96,24 @@ async function main() {
     await deposit(ippool, mockApe, apeId);
     //await withdraw(ippool, mockApe, apeId);
     //await deposit(ippool, mockApe, apeId);
-    const { serviceId, derivativeToken } = await registerService(factory, accounts[0], "vtuber", "vtuber", "vtuber demo")
+    const { serviceId, derivative } = await registerService(factory, accounts[0], "vtuber", "vtuber", "vtuber demo")
 
     const orderId = await place_order(factory, mockApe, apeId, serviceId);
-    console.log(await factory.get_orders())
     const {derivativeTokenId} = await add_delivery(factory, orderId, `https://xxxx/superAPE/xxx`);
-    console.log(await factory.get_orders())
     const licencseId = await complete_order(factory, orderId);
     console.log(await factory.get_orders())
+
+    const addressFile = './addresses.json';
+    const addresses = fs.existsSync(addressFile)?require(addressFile):{}
+    addresses[chainId] = {
+        DerivativeFactory: factory.address,
+        IPPool: ippool.address,
+        Licenser: licenser.address,
+        Derivatives: [derivative.address],
+        MockNFT: mockApe.address
+    }
+    fs.writeFileSync('./addresses.json', JSON.stringify(addresses, undefined, '    '))
+    chainId == 1337 && await faucetETH();
 }
 
 module.exports = async function (cbk) {
