@@ -225,7 +225,7 @@ contract DerivativeFactory {
         Order storage order = orders[orderId];
         require(order.status == Status.Deliveried, "onlyDeliveried");
         require(msg.sender == order.user, "only orderOwner");
-        order.status == Status.Completed;
+        order.status = Status.Completed;
 
         Derivative derivative = Derivative(order.derivativeContract);
         derivative.transferFrom(address(this), order.user, order.derivativeTokenId);

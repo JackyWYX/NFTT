@@ -79,7 +79,9 @@ async function main() {
     const { serviceId, derivativeToken } = await registerService(factory, accounts[0], "vtuber", "vtuber", "vtuber demo")
 
     const orderId = await place_order(factory, mockApe, apeId, serviceId);
+    console.log(await factory.get_orders())
     const {derivativeTokenId} = await add_delivery(factory, orderId, `https://xxxx/superAPE/xxx`);
+    console.log(await factory.get_orders())
     const licencseId = await complete_order(factory, orderId);
     console.log(await factory.get_orders())
 }

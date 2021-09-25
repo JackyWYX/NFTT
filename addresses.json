@@ -1,11 +1,11 @@
 {
     "rinkeby": {
-        "DerivativeFactory": "0xd32dD85109a7aEAF560ac717912A60a30cf40F85",
-        "IPPool": "0x1D3238c832f4f9458BDE5441d81A5D14B0B08925",
-        "Licenser": "0x3f7233BA8CcF89d4cF35f79406ac1640f43c6A92",
+        "DerivativeFactory": "0x07a1C3c6b4eFAC1C494F59f19468c970B8Eca30A",
+        "IPPool": "0xf05Ba7728eb8F5074bD1a2fD6752bDECC177D9b0",
+        "Licenser": "0xC0dde67C445aC045EDcE5f8ba8B81E2C779cCe15",
         "Derivatives": [
-            "0x4a2B8D85CB96621FF4E60D019Dd9384929938Bf4"
+            "0xB61bc3B2db93edfc371c532575d58E2447D2d878"
         ],
-        "MockNFT": "0xbA086d5795095b29918537F944A42Df837Cb0d91"
+        "MockNFT": "0xcf3fb3942E6FCc94D7B5B4925A8884CE8CC6bE58"
     }
 }
