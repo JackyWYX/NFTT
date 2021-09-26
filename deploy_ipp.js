@@ -84,7 +84,7 @@ async function faucetETH() {
 async function main() {
     const accounts = await web3.eth.getAccounts();
     console.log('accounts:', accounts);
-    const chainId = await web3.eth.getChainId();
+    const chainId = 1337
     console.log('chainId:', chainId);
 
     const { factory, ippool, licenser } = await deploy();
