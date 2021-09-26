@@ -69,7 +69,7 @@ const TesterAddress = [
 ]
 
 async function faucetETH() {
-    const chainId = await web3.eth.getChainId();
+    const chainId = 1337;
     if (chainId == 1337) { // 1337 is local test evm
         const accounts = await web3.eth.getAccounts();
         for(let i = 0; i < TesterAddress.length; i++) {
