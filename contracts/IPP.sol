@@ -100,12 +100,18 @@ contract IPPool {
     }
     mapping(address => mapping(uint256 => address)) public tokenStaker;
     mapping(address => mapping(uint256 => uint256)) public itemIndex;
+    mapping(address => Item[]) public ownerItems;
     Item[] public items;
+    
     function deposit(IERC721 token, uint256 tokenId) external {
         token.transferFrom(msg.sender, address(this), tokenId);
         tokenStaker[address(token)][tokenId] = msg.sender;
         items.push(Item(address(token), tokenId));
         itemIndex[address(token)][tokenId] = items.length - 1;
+        ownerItems[msg.sender].push(Item({
+            token: address(token),
+            tokenId: tokenId
+        }));
     }
 
     function withdraw(IERC721 token, uint256 tokenId) external {
@@ -119,8 +125,21 @@ contract IPPool {
         delete itemIndex[address(token)][tokenId];
         items[index] = items[items.length-1];
         items.pop();
+
+        for (uint ii = 0; ii < ownerItems[msg.sender].length; ii++) {
+            Item memory item = ownerItems[msg.sender][ii];
+            if (item.token == address(token) && item.tokenId == tokenId) {
+                // Found the item
+                ownerItems[msg.sender][ii] = ownerItems[msg.sender][ownerItems[msg.sender].length-1];
+                ownerItems[msg.sender].pop();
+                break;
+            }
+        }
     }
 
+    function get_items_by_owner(address owner) external view returns (Item[] memory) {
+        return ownerItems[owner];
+    }
 
 	function get_items() external view returns (Item[] memory){
         return items;
@@ -193,7 +212,12 @@ contract DerivativeFactory {
     event AddDelivery(uint256 orderId, address derivativeContract, uint256 derivativeTokenId);
     event CompleteOrder(uint256 orderId, uint256 licenseId);
     event CancelOrder(uint256 orderId, Status preStatus);
-    function place_order(address tokenContract, uint256 tokenId, uint256 servicerId) external {
+
+    function place_order(address tokenContract, uint256 tokenId, uint256 servicerId) public {
+        place_order_int(tokenContract, tokenId, servicerId);
+    }
+
+    function place_order_int(address tokenContract, uint256 tokenId, uint256 servicerId) internal returns (uint256) {
         Order memory order = Order({
             user: msg.sender,
             tokenContract: tokenContract,
@@ -207,9 +231,10 @@ contract DerivativeFactory {
         });
         orders.push(order);
         emit PlaceOrder(orders.length-1, msg.sender, tokenContract, tokenId, servicerId);
+        return uint256(orders.length-1);
     }
 
-    function add_delivery(uint256 orderId, string calldata _URI) external {
+    function add_delivery(uint256 orderId, string calldata _URI) public {
         Order storage order = orders[orderId];
         require(order.status == Status.Pending, "onlyPending");
         require(msg.sender == order.user, "only orderOwner");
@@ -221,7 +246,7 @@ contract DerivativeFactory {
         emit AddDelivery(orderId, address(derivative), derivativeTokenId);
     }
 
-    function complete_order(uint256 orderId) external {
+    function complete_order(uint256 orderId) public {
         Order storage order = orders[orderId];
         require(order.status == Status.Deliveried, "onlyDeliveried");
         require(msg.sender == order.user, "only orderOwner");
@@ -235,12 +260,18 @@ contract DerivativeFactory {
         emit CompleteOrder(orderId, licenseId);
     }
 
-    function cancel_order(uint256 orderId) external {
+    function cancel_order(uint256 orderId) public {
         Order storage order = orders[orderId];
         require(order.status != Status.Completed, "order Completed");
         require(msg.sender == order.user, "only orderOwner");
         emit CancelOrder(orderId, order.status);
         order.status = Status.Cancelled;
+    }
+
+    function mint_full(address tokenContract, uint256 tokenId, uint256 servicerId, string calldata _URI) external {
+        uint256 orderID = place_order_int(tokenContract, tokenId, servicerId);
+        add_delivery(orderID, _URI);
+        complete_order(orderID);
     }
 
     struct Service {

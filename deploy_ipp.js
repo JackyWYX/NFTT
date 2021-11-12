@@ -20,6 +20,11 @@ async function deployMockAPE() {
     return mockApe;
 }
 
+async function getDepositApes(ippool, owner) {
+    const r = await ippool.get_items_by_owner(owner)
+    return r
+}
+
 async function deposit(ippool, token, tokenId) {
     await token.approve(ippool.address, tokenId);
     await ippool.deposit(token.address, tokenId);
@@ -64,8 +69,21 @@ async function add_delivery(factory, orderId, tokenURI) {
     }
 }
 
+async function mint_full(factory, token, tokenId, serviceId, tokenURI) {
+    const r = await factory.mint_full(token.address, tokenId, serviceId, tokenURI)
+
+    const placeOrderLog = r.logs.find(log => log.event == 'PlaceOrder');
+    console.log('placeOrder orderId:', Number(placeOrderLog.args.orderId))
+
+    const deliveryLog = r.logs.find(log => log.event == 'AddDelivery');
+    console.log('addDelivery derivativeTokenId:', Number(deliveryLog.args.derivativeTokenId))
+
+    const completeOrderLog = r.logs.find(log => log.event == 'CompleteOrder');
+    console.log('completeOrder licencseId:', completeOrderLog.args.licenseId.toString('hex'));
+}
+
 const TesterAddress = [
-    '0x7A6Ed0a905053A21C15cB5b4F39b561B6A3FE50f'
+    '0x14Ca95d0Dd99929FAA3F7AbD4f04a3cB145DA6c3'
 ]
 
 async function faucetETH() {
@@ -90,18 +108,28 @@ async function main() {
     const { factory, ippool, licenser } = await deploy();
 
     const apeId = 1234;
+    const apeId2 = 2345
     const mockApe = await deployMockAPE();
 
     await mockApe.mint(accounts[0], apeId);
     await deposit(ippool, mockApe, apeId);
-    //await withdraw(ippool, mockApe, apeId);
+    await mockApe.mint(accounts[0], apeId2);
+    await deposit(ippool, mockApe, apeId2);
+
+    console.log("deposit apes", await ippool.get_items_by_owner(accounts[0]))
+    await withdraw(ippool, mockApe, apeId2);
+    console.log("after withdraw", await ippool.get_items_by_owner(accounts[0]))
+
     //await deposit(ippool, mockApe, apeId);
     const { serviceId, derivative } = await registerService(factory, accounts[0], "vtuber", "vtuber", "vtuber demo")
 
     const orderId = await place_order(factory, mockApe, apeId, serviceId);
     const {derivativeTokenId} = await add_delivery(factory, orderId, `https://xxxx/superAPE/xxx`);
     const licencseId = await complete_order(factory, orderId);
-    console.log(await factory.get_orders())
+    console.log(await factory.get_orders());
+
+    console.log("start mint full");
+    await mint_full(factory, mockApe, apeId, serviceId, `https://xxxx/superAPE2/xxx`);
 
     const addressFile = './addresses.json';
     const addresses = fs.existsSync(addressFile)?require(addressFile):{}
